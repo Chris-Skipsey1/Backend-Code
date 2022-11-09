@@ -17,6 +17,7 @@ app.use(function (req, res, next) {
 
 
 // Controllers ----------------------------------
+// Medicines GET Controller
 const medicinesController = async (req, res) => {
     //Build SQL
     const table = 'medicines';
@@ -45,6 +46,7 @@ isSuccess
     : res.status(400).json({ message });
 };
 
+// Medicines Prescription GET Controller
 const medicinesPrescriptionController = async (req, res) => {
     const id = req.params.id;
     //Build SQL
@@ -77,9 +79,247 @@ isSuccess
     : res.status(400).json({ message });
 };
 
+// Personal Trainers GET Controller
+const personaltrainersController = async (req, res) => {
+    //Build SQL
+    const table = 'personaltrainers';
+    const fields = ['PersonalTrainerID', 'PersonalTrainerName'];
+    const whereTrainer = 'personaltrainers.PersonalTrainerName';
+    const extendedTable = `${table}` //LEFT JOIN prescriptions ON Prescriptions.PrescriptionMedicineID = Medicines.MedicineID`;
+    const extendedFields = `${fields}`//, medicines.MedicineID, medicines.MedicineName, Prescriptions.PrescriptionDosage`;
+    const sql = `SELECT ${extendedFields} FROM ${extendedTable}`;
+    // Execute query
+    let isSuccess = false;
+    let message = "";
+    let result = null;
+    try {
+        [result] = await database.query(sql);
+        if (result.length === 0) message = 'No record(s) found';
+        else {
+            isSuccess = true;
+            message = 'Record(s) successfully recovered';
+        }
+    }
+    catch (error) { 
+        message = `Failed to execute query: ${error.message}`;
+    }
+//Responses
+isSuccess
+    ? res.status(200).json(result)
+    : res.status(400).json({ message });
+};
+
+// Locations GET Controller
+const locationsController = async (req, res) => {
+    const id = req.params.id;
+    //Build SQL
+    const table = 'locations';
+    const fields = ['LocationID', 'LocationName'];
+    const whereLocations = 'locations.LocationID';
+    const extendedTable = `${table}` //LEFT JOIN prescriptions ON Prescriptions.PrescriptionMedicineID = Medicines.MedicineID`;
+    const extendedFields = `${fields}`//, medicines.MedicineID, medicines.MedicineName, Prescriptions.PrescriptionDosage`;
+    const sql = `SELECT ${extendedFields} FROM ${extendedTable} WHERE ${whereLocations}=${id}`;
+    // Execute query
+    let isSuccess = false;
+    let message = "";
+    let result = null;
+    try {
+        [result] = await database.query(sql);
+        if (result.length === 0) message = 'No record(s) found';
+        else {
+            isSuccess = true;
+            message = 'Record(s) successfully recovered';
+        }
+    }
+    catch (error) { 
+        message = `Failed to execute query: ${error.message}`;
+    }
+//Responses
+isSuccess
+    ? res.status(200).json(result)
+    : res.status(400).json({ message });
+};
+
+// Slot States GET Controller
+const slotstatesController = async (req, res) => {
+    const id = req.params.id;
+    //Build SQL
+    const table = 'slotstates';
+    const fields = ['SlotStateID', 'SlotStateName'];
+    const whereLocations = 'slotstates.SlotStateID';
+    const extendedTable = `${table}` //LEFT JOIN prescriptions ON Prescriptions.PrescriptionMedicineID = Medicines.MedicineID`;
+    const extendedFields = `${fields}`//, medicines.MedicineID, medicines.MedicineName, Prescriptions.PrescriptionDosage`;
+    const sql = `SELECT ${extendedFields} FROM ${extendedTable} WHERE ${whereLocations}=${id}`;
+    // Execute query
+    let isSuccess = false;
+    let message = "";
+    let result = null;
+    try {
+        [result] = await database.query(sql);
+        if (result.length === 0) message = 'No record(s) found';
+        else {
+            isSuccess = true;
+            message = 'Record(s) successfully recovered';
+        }
+    }
+    catch (error) { 
+        message = `Failed to execute query: ${error.message}`;
+    }
+//Responses
+isSuccess
+    ? res.status(200).json(result)
+    : res.status(400).json({ message });
+};
+
+// Availability GET Controller
+const availabilityController = async (req, res) => {
+    const id = req.params.id;
+    //Build SQL
+    const table = 'availability';
+    const fields = ['AvailabilityID', 'DateAndTime', 'Duration'];
+    const whereLocations = 'availability.AvailabilityID';
+    const extendedTable = `${table}` //LEFT JOIN prescriptions ON Prescriptions.PrescriptionMedicineID = Medicines.MedicineID`;
+    const extendedFields = `${fields}`//, medicines.MedicineID, medicines.MedicineName, Prescriptions.PrescriptionDosage`;
+    const sql = `SELECT ${extendedFields} FROM ${extendedTable} WHERE ${whereLocations}=${id}`;
+    // Execute query
+    let isSuccess = false;
+    let message = "";
+    let result = null;
+    try {
+        [result] = await database.query(sql);
+        if (result.length === 0) message = 'No record(s) found';
+        else {
+            isSuccess = true;
+            message = 'Record(s) successfully recovered';
+        }
+    }
+    catch (error) { 
+        message = `Failed to execute query: ${error.message}`;
+    }
+//Responses
+isSuccess
+    ? res.status(200).json(result)
+    : res.status(400).json({ message });
+};
+
+// Appointments GET Controller
+const appointmentsController = async (req, res) => {
+    const id = req.params.id;
+    //Build SQL
+    const table = 'appointments';
+    const fields = ['AppointmentID', 'AppointmentDescription'];
+    const whereLocations = 'appointments.AppointmentID';
+    const extendedTable = `${table}` //LEFT JOIN prescriptions ON Prescriptions.PrescriptionMedicineID = Medicines.MedicineID`;
+    const extendedFields = `${fields}`//, medicines.MedicineID, medicines.MedicineName, Prescriptions.PrescriptionDosage`;
+    const sql = `SELECT ${extendedFields} FROM ${extendedTable} WHERE ${whereLocations}=${id}`;
+    // Execute query
+    let isSuccess = false;
+    let message = "";
+    let result = null;
+    try {
+        [result] = await database.query(sql);
+        if (result.length === 0) message = 'No record(s) found';
+        else {
+            isSuccess = true;
+            message = 'Record(s) successfully recovered';
+        }
+    }
+    catch (error) { 
+        message = `Failed to execute query: ${error.message}`;
+    }
+//Responses
+isSuccess
+    ? res.status(200).json(result)
+    : res.status(400).json({ message });
+};
+
+// Appointments ID POST Controller
+
+const postAppointmentsController = async (req, res) => {
+    const id = req.params.id;
+    //Build SQL
+    const table = 'appointments';
+    const fields = ['AppointmentID', 'AppointmentDescription'];
+    const whereLocations = 'appointments.AppointmentID';
+    const extendedTable = `${table}` //LEFT JOIN prescriptions ON Prescriptions.PrescriptionMedicineID = Medicines.MedicineID`;
+    const extendedFields = `${fields}`//, medicines.MedicineID, medicines.MedicineName, Prescriptions.PrescriptionDosage`;
+    const sql = `SELECT ${extendedFields} FROM ${extendedTable} WHERE ${whereLocations}=${id}`;
+    // Execute query
+    let isSuccess = false;
+    let message = "";
+    let result = null;
+    try {
+        [result] = await database.query(sql);
+        if (result.length === 0) message = 'No record(s) found';
+        else {
+            isSuccess = true;
+            message = 'Record(s) successfully recovered';
+        }
+    }
+    catch (error) { 
+        message = `Failed to execute query: ${error.message}`;
+    }
+//Responses
+isSuccess
+    ? res.status(200).json(result)
+    : res.status(400).json({ message });
+};
+
+// Availability and Personal Trainer GET Controller
+
+const availabilityPersonalTrainerController = async (req, res) => {
+    const id = req.params.id;
+    //Build SQL
+    const table = 'availability';
+    const fields = ['AvailabilityID', 'DateAndTime', 'Duration', 'AvailabilityPersonalTrainerID', 'AvailabilityLocationID', 'AvailabilitySlotStateID'];
+    const wherePersonal = 'availability.AvailabilityPersonalTrainerID';
+    const extendedTable = `${table}` //LEFT JOIN prescriptions ON Prescriptions.PrescriptionMedicineID = Medicines.MedicineID`;
+    const extendedFields = `${fields}`//, medicines.MedicineID, medicines.MedicineName, Prescriptions.PrescriptionDosage`;
+    const sql = `SELECT ${extendedFields} FROM ${extendedTable} WHERE ${wherePersonal}=${id}`;
+    console.log(sql);
+    // Execute query
+    let isSuccess = false;  
+    let message = "";
+    let result = null;
+    try {
+        [result] = await database.query(sql);
+        if (result.length === 0) message = 'No record(s) found';
+        else {
+            isSuccess = true;
+            message = 'Record(s) successfully recovered';
+        }
+    }
+    catch (error) { 
+        message = `Failed to execute query: ${error.message}`;
+    }
+    
+//Responses
+isSuccess
+    ? res.status(200).json(result)
+    : res.status(400).json({ message });
+};
+
+
+
 // Endpoints ----------------------------------
+
+// Medicines
 app.get('/api/medicines', medicinesController);
 app.get('/api/medicines/clients/:id', medicinesPrescriptionController);
+// Personal Trainers
+app.get('/api/personaltrainers', personaltrainersController);
+// Locations
+app.get('/api/locations/:id', locationsController);
+// Slot States
+app.get('/api/slotstates/:id', slotstatesController);
+// Availability
+app.get('/api/availability/:id', availabilityController);
+// Appointments
+app.get('/api/appointments/:id', appointmentsController);
+app.post('/api/appointments', postAppointmentsController);
+// Slots Provider
+app.get('/api/availability/personaltrainers/:id', availabilityPersonalTrainerController);
+
 
 // Start server ----------------------------------
 const PORT = process.env.PORT || 5000;
