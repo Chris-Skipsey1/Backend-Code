@@ -1,5 +1,6 @@
 // Imports----------------------------------
 import express from 'express';
+import { createConnection } from 'mysql2';
 import database from './database.js';
 
 // Configure express app ----------------------------------
@@ -14,6 +15,8 @@ app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
+app.use(express.json());
+app.use(express.urlencoded({extended:true}));
 
 
 // Controllers ----------------------------------
@@ -234,36 +237,53 @@ isSuccess
 };
 
 // Appointments ID POST Controller
+const buildAppointmentsInsertSql = (record) => {
+    let table = 'appointments';
+    let mutablefields = ['AppointmentDescription', 'AppointmentAvailabilityID', 'AppointmentClientID'];
+    return `INSERT INTO ${table} SET
+        AppointmentDescription="${record['AppointmentDescription']}",
+        AppointmentAvailabilityID="${record['AppointmentAvailabilityID']}",
+        AppointmentClientID="${record['AppointmentClientID']}"`;
+}
+
+
 
 const postAppointmentsController = async (req, res) => {
-    const id = req.params.id;
-    //Build SQL
-    const table = 'appointments';
-    const fields = ['AppointmentID', 'AppointmentDescription'];
-    const whereLocations = 'appointments.AppointmentID';
-    const extendedTable = `${table}` //LEFT JOIN prescriptions ON Prescriptions.PrescriptionMedicineID = Medicines.MedicineID`;
-    const extendedFields = `${fields}`//, medicines.MedicineID, medicines.MedicineName, Prescriptions.PrescriptionDosage`;
-    const sql = `SELECT ${extendedFields} FROM ${extendedTable} WHERE ${whereLocations}=${id}`;
-    // Execute query
-    let isSuccess = false;
-    let message = "";
-    let result = null;
-    try {
-        [result] = await database.query(sql);
-        if (result.length === 0) message = 'No record(s) found';
-        else {
-            isSuccess = true;
-            message = 'Record(s) successfully recovered';
-        }
-    }
-    catch (error) { 
-        message = `Failed to execute query: ${error.message}`;
-    }
-//Responses
-isSuccess
-    ? res.status(200).json(result)
-    : res.status(400).json({ message });
+
+const sql = buildAppointmentsInsertSql(req.body);
+const { isSuccess, result, message: accessorMessage } = await create(sql);
+if (!isSuccess) return res.status(404).json({ message: accessorMessage });
+res.status(201).json(result);
+
 };
+
+const create = async (sql) => {
+    try {
+        const status = await database.query(sql);
+        const recoverRecordSql = buildAppointmentsInsertSql(status[0].insertId, null);
+        const {isSuccess, result, message} = await read(recoverRecordSql);
+
+        return isSuccess
+    
+        ? { isSuccess: true, result: result, message: 'Record(s) successfully recovered' }
+        : { isSuccess: false, result: null, message: `Failed to recover the inserted record: ${message}` };
+    }
+    catch (error) {
+        return { isSuccess: false, result: null, message: `Failed to execute query: ${error.message}`};
+    }
+};
+const read = async (sql) => {
+    try {
+      const [result] = await database.query(sql);
+      return (result.length === 0)
+        ? { isSuccess: false, result: null, message: 'No record(s) found' }
+        : { isSuccess: true, result: result, message: 'Record(s) successfully recovered' };
+    }
+    catch (error) {
+      return { isSuccess: false, result: null, message: `Failed to execute query: ${error.message}` };
+    }
+  };
+ 
 
 // Availability and Personal Trainer GET Controller
 
@@ -299,6 +319,33 @@ isSuccess
     : res.status(400).json({ message });
 };
 
+const appointmentsGetController = async (req, res) => {
+    //Build SQL
+    const table = 'appointments';
+    const fields = ['AppointmentID','AppointmentDescription', 'AppointmentAvailabilityID', 'AppointmentClientID'];
+    const extendedTable = `${table}` //LEFT JOIN prescriptions ON Prescriptions.PrescriptionMedicineID = Medicines.MedicineID`;
+    const extendedFields = `${fields}`//, medicines.MedicineID, medicines.MedicineName, Prescriptions.PrescriptionDosage`;
+    const sql = `SELECT ${extendedFields} FROM ${extendedTable}`;
+    // Execute query
+    let isSuccess = false;
+    let message = "";
+    let result = null;
+    try {
+        [result] = await database.query(sql);
+        if (result.length === 0) message = 'No record(s) found';
+        else {
+            isSuccess = true;
+            message = 'Record(s) successfully recovered';
+        }
+    }
+    catch (error) { 
+        message = `Failed to execute query: ${error.message}`;
+    }
+//Responses
+isSuccess
+    ? res.status(200).json(result)
+    : res.status(400).json({ message });
+};
 
 
 // Endpoints ----------------------------------
@@ -315,6 +362,7 @@ app.get('/api/slotstates/:id', slotstatesController);
 // Availability
 app.get('/api/availability/:id', availabilityController);
 // Appointments
+app.get('/api/appointments', appointmentsGetController);
 app.get('/api/appointments/:id', appointmentsController);
 app.post('/api/appointments', postAppointmentsController);
 // Slots Provider
