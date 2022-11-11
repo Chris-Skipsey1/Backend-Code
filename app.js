@@ -286,7 +286,7 @@ isSuccess
 
 const buildAppointmentSelectSql = (id) => {
     const table = 'appointments';
-    const fields = ['AppointmentID', 'AppointmentDescription'];
+    const fields = ['AppointmentID', 'AppointmentDescription', 'AppointmentAvailabilityID', 'AppointmentClientID'];
     const whereLocations = 'appointments.AppointmentID';
     const extendedTable = `${table}` //LEFT JOIN prescriptions ON Prescriptions.PrescriptionMedicineID = Medicines.MedicineID`;
     const extendedFields = `${fields}`//, medicines.MedicineID, medicines.MedicineName, Prescriptions.PrescriptionDosage`;
@@ -296,8 +296,8 @@ const buildAppointmentSelectSql = (id) => {
 const buildAppointmentsSelectSql = () => {
     const table = 'appointments';
     const fields = ['AppointmentID','AppointmentDescription', 'AppointmentAvailabilityID', 'AppointmentClientID'];
-    const extendedTable = `${table}` //LEFT JOIN prescriptions ON Prescriptions.PrescriptionMedicineID = Medicines.MedicineID`;
-    const extendedFields = `${fields}`//, medicines.MedicineID, medicines.MedicineName, Prescriptions.PrescriptionDosage`;
+    const extendedTable = `${table}` 
+    const extendedFields = `${fields}`
     const sql = `SELECT ${extendedFields} FROM ${extendedTable}`;
     return sql;
 
