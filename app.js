@@ -226,7 +226,7 @@ res.status(201).json(result);
 const create = async (sql) => {
     try {
         const status = await database.query(sql);
-        const recoverRecordSql = buildAppointmentsSelectSql(status[0].insertId, null);
+        const recoverRecordSql = buildAppointmentSelectSql(status[0].insertId, null);
         const {isSuccess, result, message} = await read(recoverRecordSql);
 
         return isSuccess
