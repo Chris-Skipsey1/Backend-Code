@@ -16,71 +16,57 @@ app.use(function (req, res, next) {
     next();
 });
 app.use(express.json());
-app.use(express.urlencoded({extended:true}));
+app.use(express.urlencoded({ extended: true }));
 
 
 // Controllers ----------------------------------
-// Medicines GET Controller
-const medicinesController = async (req, res) => {
-    //Build SQL
-    const table = 'medicines';
-    const fields = ['MedicineID','MedicineName', 'MedicineDescription', 'MedicineTakenDate'];
-    const extendedTable = `${table}` //LEFT JOIN prescriptions ON Prescriptions.PrescriptionMedicineID = Medicines.MedicineID`;
-    const extendedFields = `${fields}`//, medicines.MedicineID, medicines.MedicineName, Prescriptions.PrescriptionDosage`;
-    const sql = `SELECT ${extendedFields} FROM ${extendedTable}`;
-    // Execute query
-    let isSuccess = false;
-    let message = "";
-    let result = null;
-    try {
-        [result] = await database.query(sql);
-        if (result.length === 0) message = 'No record(s) found';
-        else {
-            isSuccess = true;
-            message = 'Record(s) successfully recovered';
-        }
-    }
-    catch (error) { 
-        message = `Failed to execute query: ${error.message}`;
-    }
-//Responsess
-isSuccess
-    ? res.status(200).json(result)
-    : res.status(400).json({ message });
-};
 
-// Medicines Prescription GET Controller
-const medicinesPrescriptionController = async (req, res) => {
-    const id = req.params.id;
-    //Build SQL
-    const table = 'medicines';
-    const whereField = 'prescriptions.PrescriptionClientID';
-    const fields = ['MedicineID','MedicineName', 'MedicineDescription', 'MedicineTakenDate'];
-    const extendedTable = `prescriptions LEFT JOIN ${table} ON prescriptions.PrescriptionMedicineID = medicines.MedicineID`;
-    const extendedFields = `${fields}, medicines.MedicineID, medicines.MedicineName, prescriptions.PrescriptionDosage`;
-    const sql = `SELECT ${extendedFields} FROM ${extendedTable} WHERE ${whereField}=${id}`;
-    console.log(sql);
-    // Execute query
-    let isSuccess = false;  
-    let message = "";
-    let result = null;
+// Build Medicines REFACTORED Controller--------------------------
+const buildMedicinesSelectSql = (id, variant) => {
+    let sql = '';
+
+    let table = 'medicines';
+    let fields = ['MedicineID', 'MedicineName', 'MedicineDescription', 'MedicineTakenDate'];
+    let extendedTable = `prescriptions LEFT JOIN ${table} ON prescriptions.PrescriptionMedicineID = medicines.MedicineID`;
+    let extendedFields = `${fields}, medicines.MedicineID, medicines.MedicineName, prescriptions.PrescriptionDosage`;
+
+    switch (variant) {
+        case 'prescriptions':
+            sql = `SELECT ${extendedFields} FROM ${extendedTable}`;
+            if (id) sql += ` WHERE PrescriptionClientID=${id}`;
+            break;
+        default:
+            sql = `SELECT ${fields} FROM ${table}`;
+            if (id) sql += ` WHERE MedicineID=${id}`;
+    }
+    return sql;
+}
+
+// Medicines GET REFACTORED Controller
+const read1 = async (selectSql) => {
+
     try {
-        [result] = await database.query(sql);
-        if (result.length === 0) message = 'No record(s) found';
-        else {
-            isSuccess = true;
-            message = 'Record(s) successfully recovered';
-        }
+        const [result] = await database.query(selectSql);
+        return (result.length === 0)
+            ? { isSuccess: false, result: null, message: 'No record(s) found' }
+            : { isSuccess: true, result: result, message: 'Record(s) successfully recovered' };
     }
-    catch (error) { 
-        message = `Failed to execute query: ${error.message}`;
+    catch (error) {
+        return { isSuccess: false, result: null, message: `Failed to execute query: ${error.message}` };
     }
-    
-//Responses
-isSuccess
-    ? res.status(200).json(result)
-    : res.status(400).json({ message });
+}
+
+const getMedicinesController = async (req, res, variant) => {
+    const id = req.params.id;
+    // Access data
+    const sql = buildMedicinesSelectSql(id, variant);
+    const { isSuccess, result, message } = await read1(sql);
+    if(!isSuccess) return res.status(404).json({message});
+
+    // Response to request 
+    res.status(200).json(result);
 };
+// --------------------------
 
 // Personal Trainers GET Controller
 const personaltrainersController = async (req, res) => {
@@ -88,7 +74,7 @@ const personaltrainersController = async (req, res) => {
     const table = 'personaltrainers';
     const fields = ['PersonalTrainerID', 'PersonalTrainerName'];
     const whereTrainer = 'personaltrainers.PersonalTrainerName';
-    const extendedTable = `${table}` 
+    const extendedTable = `${table}`
     const extendedFields = `${fields}`
     const sql = `SELECT ${extendedFields} FROM ${extendedTable}`;
     // Execute query
@@ -103,13 +89,13 @@ const personaltrainersController = async (req, res) => {
             message = 'Record(s) successfully recovered';
         }
     }
-    catch (error) { 
+    catch (error) {
         message = `Failed to execute query: ${error.message}`;
     }
-//Responses
-isSuccess
-    ? res.status(200).json(result)
-    : res.status(400).json({ message });
+    //Responses
+    isSuccess
+        ? res.status(200).json(result)
+        : res.status(400).json({ message });
 };
 
 // Locations GET Controller
@@ -134,13 +120,13 @@ const locationsController = async (req, res) => {
             message = 'Record(s) successfully recovered';
         }
     }
-    catch (error) { 
+    catch (error) {
         message = `Failed to execute query: ${error.message}`;
     }
-//Responses
-isSuccess
-    ? res.status(200).json(result)
-    : res.status(400).json({ message });
+    //Responses
+    isSuccess
+        ? res.status(200).json(result)
+        : res.status(400).json({ message });
 };
 
 // Slot States GET Controller
@@ -165,13 +151,13 @@ const slotstatesController = async (req, res) => {
             message = 'Record(s) successfully recovered';
         }
     }
-    catch (error) { 
+    catch (error) {
         message = `Failed to execute query: ${error.message}`;
     }
-//Responses
-isSuccess
-    ? res.status(200).json(result)
-    : res.status(400).json({ message });
+    //Responses
+    isSuccess
+        ? res.status(200).json(result)
+        : res.status(400).json({ message });
 };
 
 // Availability GET Controller
@@ -196,13 +182,13 @@ const availabilityController = async (req, res) => {
             message = 'Record(s) successfully recovered';
         }
     }
-    catch (error) { 
+    catch (error) {
         message = `Failed to execute query: ${error.message}`;
     }
-//Responses
-isSuccess
-    ? res.status(200).json(result)
-    : res.status(400).json({ message });
+    //Responses
+    isSuccess
+        ? res.status(200).json(result)
+        : res.status(400).json({ message });
 };
 
 // Appointments ID POST Controller
@@ -217,39 +203,38 @@ const buildAppointmentsInsertSql = (record) => {
 
 const postAppointmentsController = async (req, res) => {
 
-const sql = buildAppointmentsInsertSql(req.body);
-const { isSuccess, result, message: accessorMessage } = await create(sql);
-if (!isSuccess) return res.status(404).json({ message: accessorMessage });
-res.status(201).json(result);
+    const sql = buildAppointmentsInsertSql(req.body);
+    const { isSuccess, result, message: accessorMessage } = await create(sql);
+    if (!isSuccess) return res.status(404).json({ message: accessorMessage });
+    res.status(201).json(result);
 };
 
 const create = async (sql) => {
     try {
         const status = await database.query(sql);
         const recoverRecordSql = buildAppointmentSelectSql(status[0].insertId, null);
-        const {isSuccess, result, message} = await read(recoverRecordSql);
+        const { isSuccess, result, message } = await read(recoverRecordSql);
 
         return isSuccess
-    
-        ? { isSuccess: true, result: result, message: 'Record(s) successfully recovered' }
-        : { isSuccess: false, result: null, message: `Failed to recover the inserted record: ${message}` };
+
+            ? { isSuccess: true, result: result, message: 'Record(s) successfully recovered' }
+            : { isSuccess: false, result: null, message: `Failed to recover the inserted record: ${message}` };
     }
     catch (error) {
-        return { isSuccess: false, result: null, message: `Failed to execute query: ${error.message}`};
+        return { isSuccess: false, result: null, message: `Failed to execute query: ${error.message}` };
     }
 };
 const read = async (sql) => {
     try {
-      const [result] = await database.query(sql);
-      return (result.length === 0)
-        ? { isSuccess: false, result: null, message: 'No record(s) found' }
-        : { isSuccess: true, result: result, message: 'Record(s) successfully recovered' };
+        const [result] = await database.query(sql);
+        return (result.length === 0)
+            ? { isSuccess: false, result: null, message: 'No record(s) found' }
+            : { isSuccess: true, result: result, message: 'Record(s) successfully recovered' };
     }
     catch (error) {
-      return { isSuccess: false, result: null, message: `Failed to execute query: ${error.message}` };
+        return { isSuccess: false, result: null, message: `Failed to execute query: ${error.message}` };
     }
-  };
- 
+};
 
 // Availability and Personal Trainer GET Controller
 const availabilityPersonalTrainerController = async (req, res) => {
@@ -258,12 +243,12 @@ const availabilityPersonalTrainerController = async (req, res) => {
     const table = 'availability';
     const fields = ['AvailabilityID', 'DateAndTime', 'Duration', 'AvailabilityPersonalTrainerID', 'AvailabilityLocationID', 'AvailabilitySlotStateID'];
     const wherePersonal = 'availability.AvailabilityPersonalTrainerID';
-    const extendedTable = `${table}` 
+    const extendedTable = `${table}`
     const extendedFields = `${fields}`
     const sql = `SELECT ${extendedFields} FROM ${extendedTable} WHERE ${wherePersonal}=${id}`;
     console.log(sql);
     // Execute query
-    let isSuccess = false;  
+    let isSuccess = false;
     let message = "";
     let result = null;
     try {
@@ -274,39 +259,22 @@ const availabilityPersonalTrainerController = async (req, res) => {
             message = 'Record(s) successfully recovered';
         }
     }
-    catch (error) { 
+    catch (error) {
         message = `Failed to execute query: ${error.message}`;
     }
-    
-//Responses
-isSuccess
-    ? res.status(200).json(result)
-    : res.status(400).json({ message });
+
+    //Responses
+    isSuccess
+        ? res.status(200).json(result)
+        : res.status(400).json({ message });
 };
 
-const buildAppointmentSelectSql = (id) => {
-    const table = 'appointments';
-    const fields = ['AppointmentID', 'AppointmentDescription', 'AppointmentAvailabilityID', 'AppointmentClientID'];
-    const whereLocations = 'appointments.AppointmentID';
-    const extendedTable = `${table}` //LEFT JOIN prescriptions ON Prescriptions.PrescriptionMedicineID = Medicines.MedicineID`;
-    const extendedFields = `${fields}`//, medicines.MedicineID, medicines.MedicineName, Prescriptions.PrescriptionDosage`;
-    const sql = `SELECT ${extendedFields} FROM ${extendedTable} WHERE ${whereLocations}=${id}`;
-    return sql;
-}
-const buildAppointmentsSelectSql = () => {
-    const table = 'appointments';
-    const fields = ['AppointmentID','AppointmentDescription', 'AppointmentAvailabilityID', 'AppointmentClientID'];
-    const extendedTable = `${table}` 
-    const extendedFields = `${fields}`
-    const sql = `SELECT ${extendedFields} FROM ${extendedTable}`;
-    return sql;
-
-}
-// Appointment GET Controller
-const getAppointmentController = async (req, res) => {
+// Build Appointments REFACTORED Controller--------------------------
+// Appointments GET REFACTORED Controller
+const getAppointmentsController = async (req, res, variant) => {
     const id = req.params.id;
     //Build SQL
-    const sql = buildAppointmentSelectSql(id);
+    const sql = buildAllAppointmentsSelectSql(id, variant);
     // Execute query
     let isSuccess = false;
     let message = "";
@@ -319,46 +287,37 @@ const getAppointmentController = async (req, res) => {
             message = 'Record(s) successfully recovered';
         }
     }
-    catch (error) { 
+    catch (error) {
         message = `Failed to execute query: ${error.message}`;
     }
-//Responses
-isSuccess
-    ? res.status(200).json(result)
-    : res.status(400).json({ message });
+    //Responses
+    isSuccess
+        ? res.status(200).json(result)
+        : res.status(400).json({ message });
 };
+// Build Appointments REFACTORED Controller--------------------------
+const buildAllAppointmentsSelectSql = (id, variant) => {
+    let sql = '';
+    let table = 'appointments';
+    let fields = ['AppointmentID', 'AppointmentDescription', 'AppointmentAvailabilityID', 'AppointmentClientID'];
+    let whereLocations = 'appointments.AppointmentID';
 
-
-const getAppointmentsController = async (req, res) => {
-    //Build SQL
-    const sql = buildAppointmentsSelectSql();
-    // Execute query
-    let isSuccess = false;
-    let message = "";
-    let result = null;
-    try {
-        [result] = await database.query(sql);
-        if (result.length === 0) message = 'No record(s) found';
-        else {
-            isSuccess = true;
-            message = 'Record(s) successfully recovered';
-        }
+    switch (variant) {
+        case 'specific':
+            sql = `SELECT ${fields} FROM ${table} WHERE ${whereLocations}=${id}`;
+            break;
+        default:
+            sql = `SELECT ${fields} FROM ${table}`;
+            if (id) sql += ` WHERE AppointmentID=${id}`;
     }
-    catch (error) { 
-        message = `Failed to execute query: ${error.message}`;
-    }
-//Responses
-isSuccess
-    ? res.status(200).json(result)
-    : res.status(400).json({ message });
-};
-
+    return sql;
+}
+// --------------------------
 
 // Endpoints ----------------------------------
-
 // Medicines
-app.get('/api/medicines', medicinesController);
-app.get('/api/medicines/clients/:id', medicinesPrescriptionController);
+app.get('/api/medicines', (req, res) => getMedicinesController(req, res, null)); //REFACTORED
+app.get('/api/medicines/clients/:id', (req, res) => getMedicinesController(req, res, 'prescriptions')); //REFACTORED
 // Personal Trainers
 app.get('/api/personaltrainers', personaltrainersController);
 // Locations
@@ -368,8 +327,8 @@ app.get('/api/slotstates/:id', slotstatesController);
 // Availability
 app.get('/api/availability/:id', availabilityController);
 // Appointments
-app.get('/api/appointments', getAppointmentsController);
-app.get('/api/appointments/:id', getAppointmentController);
+app.get('/api/appointments', (req, res) => getAppointmentsController(req, res, null));
+app.get('/api/appointments/:id', (req, res) => getAppointmentsController(req, res, 'specific'));
 app.post('/api/appointments', postAppointmentsController);
 // Slots Provider
 app.get('/api/availability/personaltrainers/:id', availabilityPersonalTrainerController);
