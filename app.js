@@ -43,7 +43,7 @@ const medicinesController = async (req, res) => {
     catch (error) { 
         message = `Failed to execute query: ${error.message}`;
     }
-//Responses
+//Responsess
 isSuccess
     ? res.status(200).json(result)
     : res.status(400).json({ message });
