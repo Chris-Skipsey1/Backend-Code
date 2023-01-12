@@ -312,6 +312,49 @@ const buildAllAppointmentsSelectSql = (id, variant) => {
     }
     return sql;
 }
+
+// GET a Client's appointment
+
+
+
+
+
+const clientsAppointmentController = async (req, res) => {
+    const id = req.params.id;
+    //Build SQL
+    let table = 'appointments';
+    const whereField = 'clients.ClientID';
+    const fields = ['AppointmentID','AppointmentDescription', 'AppointmentAvailabilityID'];
+    const extendedTable = `((${table} LEFT JOIN clients ON appointments.AppointmentClientID = clients.ClientID) 
+                            LEFT JOIN availability ON appointments.AppointmentAvailabilityID = availability.AvailabilityID)
+                            LEFT JOIN personaltrainers ON availability.AvailabilityPersonalTrainerID = personaltrainers.PersonalTrainerID`                                                                 
+    const extendedFields = `${fields}, clients.ClientID, clients.ClientName, availability.AvailabilityPersonalTrainerID, personaltrainers.PersonalTrainerName,
+     availability.AvailabilityID, availability.DateAndTime`;
+    const sql = `SELECT ${extendedFields} FROM ${extendedTable} WHERE ${whereField}=${id}`;
+    console.log(sql);
+    // Execute query
+    let isSuccess = false;  
+    let message = "";
+    let result = null;
+    try {
+        [result] = await database.query(sql);
+        if (result.length === 0) message = 'No record(s) found';
+        else {
+            isSuccess = true;
+            message = 'Record(s) successfully recovered';
+        }
+    }
+    catch (error) { 
+        message = `Failed to execute query: ${error.message}`;
+    }
+//Responses
+isSuccess
+    ? res.status(200).json(result)
+    : res.status(400).json({ message });
+};
+
+
+
 // --------------------------
 
 // Endpoints ----------------------------------
@@ -332,6 +375,10 @@ app.get('/api/appointments/:id', (req, res) => getAppointmentsController(req, re
 app.post('/api/appointments', postAppointmentsController);
 // Slots Provider
 app.get('/api/availability/personaltrainers/:id', availabilityPersonalTrainerController);
+
+//Client's Appointments
+app.get('/api/appointments/clients/:id', clientsAppointmentController);
+
 
 
 // Start server ----------------------------------
