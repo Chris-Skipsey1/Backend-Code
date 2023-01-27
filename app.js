@@ -193,49 +193,7 @@ const availabilityController = async (req, res) => {
 };
 
 // Appointments ID POST Controller
-const buildAppointmentsInsertSql = (record) => {
-    let table = 'appointments';
-    let mutablefields = ['AppointmentDescription', 'AppointmentAvailabilityID', 'AppointmentClientID'];
-    return `INSERT INTO ${table} SET
-        AppointmentDescription="${record['AppointmentDescription']}",
-        AppointmentAvailabilityID=${record['AppointmentAvailabilityID']},
-        AppointmentClientID=${record['AppointmentClientID']}`;
-};
 
-const postAppointmentsController = async (req, res) => {
-
-    const sql = buildAppointmentsInsertSql(req.body);
-    const { isSuccess, result, message: accessorMessage } = await create(sql);
-    if (!isSuccess) return res.status(404).json({ message: accessorMessage });
-    res.status(201).json(result);
-};
-
-const create = async (sql) => {
-    try {
-        const status = await database.query(sql);
-        const recoverRecordSql = buildAppointmentSelectSql(status[0].insertId, null);
-        const { isSuccess, result, message } = await read(recoverRecordSql);
-
-        return isSuccess
-
-            ? { isSuccess: true, result: result, message: 'Record(s) successfully recovered' }
-            : { isSuccess: false, result: null, message: `Failed to recover the inserted record: ${message}` };
-    }
-    catch (error) {
-        return { isSuccess: false, result: null, message: `Failed to execute query: ${error.message}` };
-    }
-};
-const read = async (sql) => {
-    try {
-        const [result] = await database.query(sql);
-        return (result.length === 0)
-            ? { isSuccess: false, result: null, message: 'No record(s) found' }
-            : { isSuccess: true, result: result, message: 'Record(s) successfully recovered' };
-    }
-    catch (error) {
-        return { isSuccess: false, result: null, message: `Failed to execute query: ${error.message}` };
-    }
-};
 
 // Availability and Personal Trainer GET Controller
 const availabilityPersonalTrainerController = async (req, res) => {
