@@ -2,6 +2,7 @@
 import express from 'express';
 import { createConnection } from 'mysql2';
 import database from './database.js';
+import appointmentsRouter from './routers/appointments-router.js';
 
 // Configure express app ----------------------------------
 const app = new express();
@@ -17,7 +18,7 @@ app.use(function (req, res, next) {
 });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+//app.get('/api/appointments/clients/:id', (req, res) => getAppointmentsController(req, res, 'clientappointments'));
 
 // Controllers ----------------------------------
 
@@ -271,53 +272,9 @@ const availabilityPersonalTrainerController = async (req, res) => {
 
 // Build Appointments REFACTORED Controller--------------------------
 // Appointments GET REFACTORED Controller
-const getAppointmentsController = async (req, res, variant) => {
-    const id = req.params.id;
-    //Build SQL
-    const sql = buildAllAppointmentsSelectSql(id, variant);
-    // Execute query
-    let isSuccess = false;
-    let message = "";
-    let result = null;
-    try {
-        [result] = await database.query(sql);
-        if (result.length === 0) message = 'No record(s) found';
-        else {
-            isSuccess = true;
-            message = 'Record(s) successfully recovered';
-        }
-    }
-    catch (error) {
-        message = `Failed to execute query: ${error.message}`;
-    }
-    //Responses
-    isSuccess
-        ? res.status(200).json(result)
-        : res.status(400).json({ message });
-};
-// Build Appointments REFACTORED Controller--------------------------
-const buildAllAppointmentsSelectSql = (id, variant) => {
-    let sql = '';
-    let table = 'appointments';
-    let fields = ['AppointmentID', 'AppointmentDescription', 'AppointmentAvailabilityID', 'AppointmentClientID'];
-    let whereLocations = 'appointments.AppointmentID';
 
-    switch (variant) {
-        case 'specific':
-            sql = `SELECT ${fields} FROM ${table} WHERE ${whereLocations}=${id}`;
-            break;
-        default:
-            sql = `SELECT ${fields} FROM ${table}`;
-            if (id) sql += ` WHERE AppointmentID=${id}`;
-    }
-    return sql;
-}
 
 // GET a Client's appointment
-
-
-
-
 
 const clientsAppointmentController = async (req, res) => {
     const id = req.params.id;
@@ -354,6 +311,73 @@ isSuccess
 };
 
 
+// GET Excercises
+const exerciseController = async (req, res) => {
+    const id = req.params.id;
+    //Build SQL
+    const table = 'exercises';
+    const fields = ['ExerciseID', 'ExerciseName', 'ExerciseDescription'];
+    const extendedTable = `${table}`;
+    const extendedFields = `${fields}`;
+    const sql = `SELECT ${extendedFields} FROM ${extendedTable}`;
+    console.log(sql);
+    // Execute query
+    let isSuccess = false;
+    let message = "";
+    let result = null;
+    try {
+        [result] = await database.query(sql);
+        if (result.length === 0) message = 'No record(s) found';
+        else {
+            isSuccess = true;
+            message = 'Record(s) successfully recovered';
+        }
+    }
+    catch (error) {
+        message = `Failed to execute query: ${error.message}`;
+    }
+
+    //Responses
+    isSuccess
+        ? res.status(200).json(result)
+        : res.status(400).json({ message });
+};
+
+
+// GET Client's Excercises
+const clientExerciseController = async (req, res) => {
+    const id = req.params.id;
+    //Build SQL
+    let table = 'exerciseinfo';
+    const whereField = 'exerciseinfo.InfoClientID';
+    const fields = ['ExerciseInfoID', 'DateDone', 'AmountCompleted', 'InfoExerciseID', 'InfoClientID'];
+    const extendedTable = `exercises LEFT JOIN ${table} ON exercises.ExerciseID = exerciseinfo.InfoExerciseID`; 
+    const extendedFields = `${fields}, exercises.ExerciseName, exercises.ExerciseDescription`;
+    const sql = `SELECT ${extendedFields} FROM ${extendedTable} WHERE ${whereField}=${id}`;
+    console.log(sql);
+    // Execute query
+    let isSuccess = false;
+    let message = "";
+    let result = null;
+    try {
+        [result] = await database.query(sql);
+        if (result.length === 0) message = 'No record(s) found';
+        else {
+            isSuccess = true;
+            message = 'Record(s) successfully recovered';
+        }
+    }
+    catch (error) {
+        message = `Failed to execute query: ${error.message}`;
+    }
+
+    //Responses
+    isSuccess
+        ? res.status(200).json(result)
+        : res.status(400).json({ message });
+};
+
+
 
 // --------------------------
 
@@ -370,16 +394,17 @@ app.get('/api/slotstates/:id', slotstatesController);
 // Availability
 app.get('/api/availability/:id', availabilityController);
 // Appointments
-app.get('/api/appointments', (req, res) => getAppointmentsController(req, res, null));
-app.get('/api/appointments/:id', (req, res) => getAppointmentsController(req, res, 'specific'));
-app.post('/api/appointments', postAppointmentsController);
+
 // Slots Provider
 app.get('/api/availability/personaltrainers/:id', availabilityPersonalTrainerController);
 
 //Client's Appointments
-app.get('/api/appointments/clients/:id', clientsAppointmentController);
+app.use('/api/appointments', appointmentsRouter);
 
 
+//Client's Exercises
+app.get('/api/exercises', exerciseController);
+app.get('/api/exercises/clients/:id', clientExerciseController);
 
 // Start server ----------------------------------
 const PORT = process.env.PORT || 5000;
