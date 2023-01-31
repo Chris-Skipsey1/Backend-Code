@@ -31,13 +31,14 @@ const buildAllAppointmentsSelectSql = (id, variant) => {
     return sql;
 }
 
-const buildAppointmentsInsertSql = (record) => {
+const buildAppointmentsCreateQuery = (record) => {
     let table = 'appointments';
     let mutablefields = ['AppointmentDescription', 'AppointmentAvailabilityID', 'AppointmentClientID'];
-    return `INSERT INTO ${table} SET
+    const sql = `INSERT INTO ${table} SET
         AppointmentDescription="${record['AppointmentDescription']}",
         AppointmentAvailabilityID=${record['AppointmentAvailabilityID']},
         AppointmentClientID=${record['AppointmentClientID']}`;
+        return { sql, data: record };
 };
 
 
@@ -95,9 +96,9 @@ const getAppointmentsController = async (req, res, variant) => {
 };
 
 const postAppointmentsController = async (req, res) => {
-
-    const sql = buildAppointmentsInsertSql(req.body);
-    const { isSuccess, result, message: accessorMessage } = await create(sql);
+    const record = req.body;
+    const query = buildAppointmentsCreateQuery(record);
+    const { isSuccess, result, message: accessorMessage } = await create(query);
     if (!isSuccess) return res.status(404).json({ message: accessorMessage });
     res.status(201).json(result);
 };
