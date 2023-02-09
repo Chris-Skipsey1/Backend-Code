@@ -4,7 +4,7 @@ import database from '../database.js';
 const router = Router();
 
 // Query Builder
-const buildPersonaltrainerSql = (id, variant) => {
+const buildPersonaltrainerReadQuery = (id, variant) => {
     let sql = '';
     //Build SQL
     let table = 'personaltrainers';
@@ -19,7 +19,7 @@ const buildPersonaltrainerSql = (id, variant) => {
         default:
             sql = `SELECT ${fields} FROM ${table}`;
     }
-    return sql;
+    return { sql, data: { ID: id } };
 }
 // Data Accessor
 const read = async (sql, id) => {
@@ -38,7 +38,7 @@ const read = async (sql, id) => {
 const personalTrainersController = async (req, res, variant) => {
     const id = req.params.id;
     // Access data
-    const sql = buildPersonaltrainerSql(id, variant);
+    const sql = buildPersonaltrainerReadQuery(id, variant);
     const { isSuccess, result, message } = await read(sql, id);
     if(!isSuccess) return res.status(404).json({message});
 

@@ -4,7 +4,7 @@ import database from '../database.js';
 const router = Router();
 
 // Query Builder
-const buildAvailabilityPersonalTrainerSelectSql = (id, variant) => {
+const buildAvailabilityPersonalTrainerReadQuery = (id, variant) => {
     let sql = '';
     let table = 'availability';
     let fields = ['AvailabilityID', 'DateAndTime', 'Duration', 'AvailabilityPersonalTrainerID', 'AvailabilityLocationID', 'AvailabilitySlotStateID'];
@@ -23,13 +23,13 @@ const buildAvailabilityPersonalTrainerSelectSql = (id, variant) => {
         default:
             sql = `SELECT ${fields} FROM ${table}`;
     }
-    return sql;
+    return { sql, data: { ID: id} };
 }
 // Data Accessor
-const read = async (sql, id) => {
+const read = async (query) => {
 
     try {
-        const [result] = await database.query(sql, { ID: id });
+        const [result] = await database.query(query.sql, query.data);
         return (result.length === 0)
             ? { isSuccess: false, result: null, message: 'No record(s) found' }
             : { isSuccess: true, result: result, message: 'Record(s) successfully recovered' };
@@ -42,8 +42,8 @@ const read = async (sql, id) => {
 const availabilityController = async (req, res, variant) => {
     const id = req.params.id;
     // Access data
-    const sql = buildAvailabilityPersonalTrainerSelectSql(id, variant);
-    const { isSuccess, result, message } = await read(sql, id);
+    const query = buildAvailabilityPersonalTrainerReadQuery(id, variant);
+    const { isSuccess, result, message } = await read(query);
     if(!isSuccess) return res.status(404).json({message});
 
     // Response to request 

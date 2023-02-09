@@ -4,7 +4,7 @@ import database from '../database.js';
 const router = Router();
 
 // Query Builder
-const buildClientExerciseSql = (id, variant) => {
+const buildClientExerciseReadQuery = (id, variant) => {
     let sql = '';
     let table = 'exerciseinfo';
     let fields = ['ExerciseInfoID', 'DateDone', 'AmountCompleted', 'InfoExerciseID', 'InfoClientID'];
@@ -19,12 +19,13 @@ const buildClientExerciseSql = (id, variant) => {
         default:
             sql = `SELECT ${fields} FROM ${table}`;
     }
-    return sql;
+    return { sql, data: { ID: id} };
 }
 // Data Accessor
-const read = async (sql, id) => {
+const read = async (id, variant) => {
     try {
-        const [result] = await database.query(sql, { ID: id });
+        const { sql, data } = buildClientExerciseReadQuery(id, variant);
+        const [result] = await database.query(sql, data);
         return (result.length === 0)
             ? { isSuccess: false, result: null, message: 'No record(s) found' }
             : { isSuccess: true, result: result, message: 'Record(s) successfully recovered' };
@@ -37,8 +38,8 @@ const read = async (sql, id) => {
 const clientExerciseController = async (req, res, variant) => {
     const id = req.params.id;
     // Access data
-    const sql = buildClientExerciseSql(id, variant);
-    const { isSuccess, result, message } = await read(sql, id);
+
+    const { isSuccess, result, message } = await read(id, variant);
     if(!isSuccess) return res.status(404).json({message});
 
     // Response to request 
