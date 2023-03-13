@@ -1,9 +1,6 @@
-// Imports-------------------------
 import mysql from 'mysql2/promise';
 
-
 // Database connection-------------------------
-
 const dbConfig = {
     database: process.env.DB_NAME || 'displaymedicines',
     port: process.env.DB_PORT || 3306,
@@ -12,9 +9,7 @@ const dbConfig = {
     password: process.env.DB_PSWD || '',
     namedPlaceholders: true
 };
-
 let database = null;
-
 try {
     database = await mysql.createConnection(dbConfig);
 }
@@ -23,4 +18,3 @@ catch (error) {
     process.exit();
 }
 export default database;
-

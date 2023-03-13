@@ -3,7 +3,6 @@ import database from '../database.js';
 
 const router = Router();
 
-
 // Query builders / Data accessors---
 const buildAllAppointmentsSelectSql = (id, variant) => {
     let sql = '';
@@ -17,13 +16,10 @@ const buildAllAppointmentsSelectSql = (id, variant) => {
     let whereLocations = 'appointments.AppointmentID';
 
     switch (variant) {
-        case 'specific':
-            sql = `SELECT ${fields} FROM ${table} WHERE ${whereLocations}=${id}`;
+        case 'clientappointments':
+            sql = `SELECT ${extendedFields} FROM ${extendedTable}`;
+            if (id) sql += ` WHERE ClientID=${id}`;
             break;
-            case 'clientappointments':
-                sql = `SELECT ${extendedFields} FROM ${extendedTable}`;
-                if (id) sql += ` WHERE ClientID=${id}`;
-                break;
         default:
             sql = `SELECT ${fields} FROM ${table}`;
             if (id) sql += ` WHERE AppointmentID=${id}`;
@@ -103,11 +99,92 @@ const postAppointmentsController = async (req, res) => {
     res.status(201).json(result);
 };
 
+const buildSetFields = (fields) => fields.reduce((setSQL, field, index) =>
+setSQL + `${field}=:${field}` + ((index === fields.length - 1) ? '' : ', '), 'SET ');
+
+// PUT Appointments SQL
+const buildAppointmentsUpdateSql = () => {
+    let table = 'appointments';
+    let mutableFields = ['AppointmentDescription', 'AppointmentAvailabilityID'];
+    const sql = `UPDATE ${table} ` + buildSetFields(mutableFields) + ` WHERE AppointmentID=:AppointmentID`;
+    console.log(sql);
+    return sql;
+}
+
+// PUT Appointments Controller
+const putAppointmentsController = async (req, res) => {
+    // Validate request
+    const id = req.params.id;
+    const record = req.body;
+    // Access data
+    const sql = buildAppointmentsUpdateSql();
+    const { isSuccess, result, message: accessorMessage } = await updateAppointments(sql, id, record);
+    if (!isSuccess) return res.status(400).json({ message: accessorMessage });
+    res.status(200).json(result);
+};
+
+
+// PUT CREATE Appointments
+const updateAppointments = async (sql, id, record) => {
+    try {
+        const status = await database.query(sql, { ...record, AppointmentID: id });
+
+        if (status[0].affectedRows === 0)
+        return { isSuccess: false, result: null, message: `Failed to update record: no rows affected` };
+
+        const recoverRecordSql = buildAllAppointmentsSelectSql(id, null);
+        const { isSuccess, result, message } = await read(recoverRecordSql);
+
+        return isSuccess
+
+            ? { isSuccess: true, result: result, message: 'Record(s) successfully recovered' }
+            : { isSuccess: false, result: null, message: `Failed to recover the updated record: ${message}` };
+    }
+    catch (error) {
+        return { isSuccess: false, result: null, message: `Failed to execute query: ${error.message}` };
+    }
+};
+
+
+// DELETE Appointments Controller
+const deleteAppointmentController = async (req, res) => {
+    // Validate request
+    const id = req.params.id;
+    const record = req.body;
+    // Access data
+    const sql = buildAppointmentsDeleteSql();
+    const { isSuccess, result, message: accessorMessage } = await deleteAppointments(sql, id);
+    if (!isSuccess) return res.status(400).json({ message: accessorMessage });
+    res.status(202).json({ message: accessorMessage });
+};
+
+// DELETE Appointments
+const deleteAppointments = async (sql, id) => {
+    try {
+        const status = await database.query(sql, { AppointmentID: id });
+        return status[0].affectedRows === 0 
+            ? { isSuccess: false, result: null, message: `Failed to delete record: ${id}` }
+            : { isSuccess: true, result: null, message: 'Record(s) successfully deleted' };
+    }
+    catch (error) {
+        return { isSuccess: false, result: null, message: `Failed to execute query: ${error.message}` };
+    }
+};
+
+// DELETE Appointments SQL
+const buildAppointmentsDeleteSql = () => {
+    let table = 'appointments';
+    return `DELETE FROM ${table} WHERE AppointmentID=:AppointmentID`;
+}
 
 // Endpoints---
 router.get('/clients/:id', (req, res) => getAppointmentsController(req, res, 'clientappointments'));
 router.get('/', (req, res) => getAppointmentsController(req, res, null));
-router.get('/:id', (req, res) => getAppointmentsController(req, res, 'specific'));
+router.get('/:id(\\d+)', (req, res) => getAppointmentsController(req, res, null));
 router.post('/', postAppointmentsController);
+
+// New endpoint
+router.put('/:id',putAppointmentsController);
+router.delete('/:id', deleteAppointmentController);
 
 export default router;

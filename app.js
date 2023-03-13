@@ -1,7 +1,6 @@
-// Imports----------------------------------
 import express from 'express';
-import { createConnection } from 'mysql2';
-import database from './database.js';
+//import { createConnection } from 'mysql2';
+//import database from './database.js';
 import appointmentsRouter from './routers/appointments-router.js';
 import medicinesRouter from './routers/medicines-router.js';
 import personaltrainers from './routers/personaltrainers-router.js';
@@ -9,6 +8,7 @@ import exercise from './routers/exercise-router.js';
 import availability from './routers/availability-router.js';
 import slotstates from './routers/slotstate-router.js';
 import locations from './routers/locations-router.js';
+import cors from 'cors';
 
 // Configure express app ----------------------------------
 const app = new express();
@@ -21,6 +21,7 @@ app.use(function (req, res, next) {
 });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors({ origin: '*' }));
 
 // Endpoints ----------------------------------
 // Medicines
