@@ -8,6 +8,7 @@ import exercise from './routers/exercise-router.js';
 import availability from './routers/availability-router.js';
 import slotstates from './routers/slotstate-router.js';
 import locations from './routers/locations-router.js';
+import clients from './routers/clients-router.js';
 import cors from 'cors';
 
 // Configure express app ----------------------------------
@@ -38,6 +39,8 @@ app.use('/api/availability', availability);
 app.use('/api/slotstates', slotstates);
 // Locations
 app.use('/api/locations', locations);
+// Clients
+app.use('/api/clients', clients);
 
 // Start server ----------------------------------
 const PORT = process.env.PORT || 5000;
