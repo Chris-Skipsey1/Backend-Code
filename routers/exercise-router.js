@@ -22,14 +22,16 @@ const buildClientExerciseReadQuery = (id, variant) => {
             break;
         default:
             sql = `SELECT ${fields} FROM ${table}`;
+            if (id) sql += ` WHERE exerciseinfo.ExerciseInfoID=:ID`;
     }
+    //console.log(sql)
     return { sql, data: { ID: id} };
 }
 // Data Accessor
-const read = async (id, variant) => {
+const read = async (query) => {
     try {
-        const { sql, data } = buildClientExerciseReadQuery(id, variant);
-        const [result] = await database.query(sql, data);
+        //const { sql, data } = buildClientExerciseReadQuery(id, variant);
+        const [result] = await database.query(query.sql, query.data);
         return (result.length === 0)
             ? { isSuccess: false, result: null, message: 'No record(s) found' }
             : { isSuccess: true, result: result, message: 'Record(s) successfully recovered' };
@@ -42,8 +44,8 @@ const read = async (id, variant) => {
 const clientExerciseController = async (req, res, variant) => {
     const id = req.params.id;
     // Access data
-
-    const { isSuccess, result, message } = await read(id, variant);
+    const query = buildClientExerciseReadQuery(id, variant);
+    const { isSuccess, result, message } = await read(query);
     if(!isSuccess) return res.status(404).json({message});
 
     // Response to request 
@@ -70,7 +72,7 @@ const buildExercisePutSql = () => {
     let table = 'exerciseinfo';
     let mutableFields = ['ExerciseInfoID', 'DateDone', 'AmountCompleted', 'InfoExerciseID', 'InfoClientID', 'Favourite'];
     const sql = `UPDATE ${table} ` + buildSetFields(mutableFields) + ` WHERE ExerciseInfoID=:ExerciseInfoID`;
-    console.log(sql);
+    //console.log(sql);
     return sql;
 }
 
@@ -84,8 +86,9 @@ const updateExercises = async (sql, id, record) => {
         return { isSuccess: false, result: null, message: `Failed to update record: no rows affected` };
 
         const recoverRecordSql = buildClientExerciseReadQuery(id, null);
+        console.log(recoverRecordSql)
         const { isSuccess, result, message } = await read(recoverRecordSql);
-
+        
         return isSuccess
 
             ? { isSuccess: true, result: result, message: 'Record(s) successfully recovered' }
