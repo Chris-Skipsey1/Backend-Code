@@ -99,10 +99,6 @@ const updateExercises = async (sql, id, record) => {
     }
 };
 
-
-
-
-
 // Endpoints
 router.get('/', (req, res) => clientExerciseController(req, res, null));
 router.get('/:id', (req, res) => clientExerciseController(req, res, 'exerciseID'));
