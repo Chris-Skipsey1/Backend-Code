@@ -1,8 +1,10 @@
+// Connecting to the DB
+
 import mysql from 'mysql2/promise';
 
 // Database connection-------------------------
 const dbConfig = {
-    database: process.env.DB_NAME || 'displaymedicines',
+    database: process.env.DB_NAME || 'displaymedicines', // DB Name - Changeable
     port: process.env.DB_PORT || 3306,
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',

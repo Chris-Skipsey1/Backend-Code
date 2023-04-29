@@ -1,6 +1,4 @@
 import express from 'express';
-//import { createConnection } from 'mysql2';
-//import database from './database.js';
 import appointmentsRouter from './routers/appointments-router.js';
 import medicinesRouter from './routers/medicines-router.js';
 import personaltrainers from './routers/personaltrainers-router.js';
@@ -14,7 +12,7 @@ import cors from 'cors';
 // Configure express app ----------------------------------
 const app = new express();
 
-// Configure middleware ----------------------------------
+// Configure middleware - need to run front and backend at same time 
 app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
