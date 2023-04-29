@@ -3,7 +3,7 @@ import database from '../database.js';
 
 const router = Router();
 
-// Query Builder
+// Query Builders
 const buildClientExerciseReadQuery = (id, variant) => {
     let sql = '';
     let table = 'exerciseinfo';
